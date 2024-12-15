@@ -52,8 +52,9 @@ enum AffixType {
 /// is the radical and has repeated double sequence that is "ጥም" "Tm". Therefore, the first
 /// sub-string which is Tem is removed from the string and leaving the word as "ግልጠም" gelTem.
 fn deduplicate_double_letter(word: String, sadis_map: &HashMap<char, char>) -> String {
-    let radical = radical(word, sadis_map);
-    pair_deduplicate(radical)
+    let radical = radical(word.clone(), sadis_map);
+    let indices = find_duplicate_pairs(radical.as_str());
+    remove_at_indexes(&word, &indices)
 }
 
 /// Changes the each character in the string to their sadis i.e. ገልጠምጠም -> ግልጥምጥም
@@ -63,22 +64,55 @@ fn radical(word: String, sadis_map: &HashMap<char, char>) -> String {
     for c in word.chars() {
         radical.push(*sadis_map.get(&c).unwrap());
     }
-    word
+    radical
 }
 
-fn pair_deduplicate(s: String) -> String {
-    if s.len() < 4 {
-        return s;
-    }
-    let mut chars: Vec<char> = s.chars().collect();
-    for i in 0..chars.len() - 3 {
-        if (chars[i..i + 2]) == (chars[i + 2..i + 4]) {
-            chars.splice(i..i + 2, []);
-            return pair_deduplicate(chars.into_iter().collect());
+fn find_duplicate_pairs(s: &str) -> Vec<usize> {
+    let mut indices = Vec::new();
+    let chars: Vec<char> = s.chars().collect();
+    
+    if chars.len() < 4 { return indices; }
+    
+    let mut i = 0;
+    while i <= chars.len() - 4 {
+        if chars[i..i + 2] == chars[i + 2..i + 4] {
+            indices.extend_from_slice(&[i, i + 1]);
+            i += 4;
+        } else {
+            i += 1;
         }
     }
-    s
+    
+    indices
 }
+
+fn remove_at_indices(s: &str, mut indices: Vec<usize>) -> String {
+    if indices.is_empty() {
+        return s.to_string();
+    }
+    indices.sort_unstable();
+    let mut result = String::with_capacity(s.len() - indices.len());
+    for (i, c) in s.char_indices() {
+        if !indices.contains(&i) {
+            result.push(c);
+        }
+    }
+    result
+}
+
+// fn pair_deduplicate(s: String) -> String {
+//     if s.len() < 4 {
+//         return s;
+//     }
+//     let mut chars: Vec<char> = s.chars().collect();
+//     for i in 0..chars.len() - 3 {
+//         if (chars[i..i + 2]) == (chars[i + 2..i + 4]) {
+//             chars.splice(i..i + 2, []);
+//             return pair_deduplicate(chars.into_iter().collect());
+//         }
+//     }
+//     s
+// }
 
 /// The second step removes prefix-suffix pair. This step takes the output of the previous step as
 /// an input and checks if the word contains match with any of the prefix-suffix pair. If the word
