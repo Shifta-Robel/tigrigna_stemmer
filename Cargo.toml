@@ -7,4 +7,5 @@ edition = "2021"
 axum = "0.7.9"
 serde = "1.0.216"
 serde_json = "1.0.133"
+thiserror = "2.0.7"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }

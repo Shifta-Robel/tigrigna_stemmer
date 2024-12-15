@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+pub mod types;
+
 const MINIMUM_STEM_LENGTH: u8 = 3;
 
 /// Transforms input string into a vector of tokens, a token being a sequence of only geez letter
@@ -103,7 +105,7 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
                     if count_radicals(stem.clone()) >= MINIMUM_STEM_LENGTH.into() {
                         return stem;
                     }
-                    return word
+                    return word;
                 }
             }
             word
