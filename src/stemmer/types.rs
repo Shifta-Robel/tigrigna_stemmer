@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[allow(unused)]
 #[derive(Debug, thiserror::Error)]
 pub enum StemmerError {
     #[error("Failed to load resource {0}")]

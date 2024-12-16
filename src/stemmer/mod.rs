@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::collections::HashMap;
 
 pub mod types;
@@ -38,7 +36,7 @@ pub fn stem_word(
     let double_depulicated = deduplicate_double_letter(word, sadis_map);
     let pref_suf_pair_rmvd = rm_prefix_suffix_pair(double_depulicated, prefix_suffix_pair_list);
     let pref_rmvd = rm_affix(pref_suf_pair_rmvd, &prefix_list, AffixType::Prefix);
-    rm_affix(pref_rmvd, &suffix_list, AffixType::Suffix)
+    deduplicate_single_letter(rm_affix(pref_rmvd, &suffix_list, AffixType::Suffix), sadis_map)
 }
 
 enum AffixType {
@@ -60,7 +58,7 @@ fn deduplicate_double_letter(word: String, sadis_map: &HashMap<char, char>) -> S
 /// Changes the each character in the string to their sadis i.e. ገልጠምጠም -> ግልጥምጥም
 fn radical(word: String, sadis_map: &HashMap<char, char>) -> String {
     // አ ዐ families seem to be their own sadis forms, TODO findout if this is right
-    let mut radical = String::with_capacity(word.len());
+    let mut radical = String::with_capacity(word.chars().count());
     for c in word.chars() {
         radical.push(*sadis_map.get(&c).unwrap());
     }
@@ -86,34 +84,6 @@ fn find_duplicate_pairs(s: &str) -> Vec<usize> {
     indices
 }
 
-fn remove_at_indices(s: &str, mut indices: Vec<usize>) -> String {
-    if indices.is_empty() {
-        return s.to_string();
-    }
-    indices.sort_unstable();
-    let mut result = String::with_capacity(s.len() - indices.len());
-    for (i, c) in s.char_indices() {
-        if !indices.contains(&i) {
-            result.push(c);
-        }
-    }
-    result
-}
-
-// fn pair_deduplicate(s: String) -> String {
-//     if s.len() < 4 {
-//         return s;
-//     }
-//     let mut chars: Vec<char> = s.chars().collect();
-//     for i in 0..chars.len() - 3 {
-//         if (chars[i..i + 2]) == (chars[i + 2..i + 4]) {
-//             chars.splice(i..i + 2, []);
-//             return pair_deduplicate(chars.into_iter().collect());
-//         }
-//     }
-//     s
-// }
-
 /// The second step removes prefix-suffix pair. This step takes the output of the previous step as
 /// an input and checks if the word contains match with any of the prefix-suffix pair. If the word
 /// contains a match and the remaining string has a length greater than three, then the prefix and
@@ -124,7 +94,7 @@ fn remove_at_indices(s: &str, mut indices: Vec<usize>) -> String {
 fn rm_prefix_suffix_pair(word: String, prefix_suffix_pair_list: Vec<(String, String)>) -> String {
     for (p, s) in prefix_suffix_pair_list {
         if word.starts_with(&p) && word.ends_with(&s) {
-            return word[p.len()..(word.len() - s.len())].into();
+            return word.chars().skip(count_radicals(&p)).take(count_radicals(&word) - count_radicals(&s)).collect();
         }
     }
     word
@@ -135,8 +105,8 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
         AffixType::Prefix => {
             for p in affix_list {
                 if word.starts_with(p) {
-                    let stem: String = word[p.len()..].into();
-                    if count_radicals(stem.clone()) >= MINIMUM_STEM_LENGTH.into() {
+                    let stem: String = word.chars().skip(count_radicals(p)).collect();
+                    if count_radicals(&stem) >= MINIMUM_STEM_LENGTH.into() {
                         return stem;
                     }
                     return word;
@@ -147,8 +117,8 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
         AffixType::Suffix => {
             for s in affix_list {
                 if word.ends_with(s) {
-                    let stem: String = word[..(word.len() - s.len())].into();
-                    if count_radicals(stem.clone()) >= MINIMUM_STEM_LENGTH.into() {
+                    let stem: String = word.chars().take(count_radicals(&word) - count_radicals(s)).collect();
+                    if count_radicals(&stem) >= MINIMUM_STEM_LENGTH.into() {
                         return stem;
                     }
                     return word;
@@ -160,9 +130,9 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
 }
 
 fn deduplicate_single_letter(word: String, sadis_map: &HashMap<char, char>) -> String {
-    let mut radical = radical(word.clone(), sadis_map);
-    let chars: Vec<char> = word.chars().collect();
-    let mut indexes: Vec<usize> = Vec::with_capacity(word.len());
+    let radical = radical(word.clone(), sadis_map);
+    let chars: Vec<char> = radical.chars().collect();
+    let mut indexes: Vec<usize> = Vec::with_capacity(count_radicals(&word));
     for i in 0..chars.len() - 1 {
         if chars[i] == chars[i + 1] {
             indexes.push(i);
@@ -181,6 +151,6 @@ fn remove_at_indexes(s: &str, indexes: &[usize]) -> String {
 
 /// Count the number of radicals in the given string, currently is seems like just length of the
 /// string for tigrigna, but update this func if any new revelations come up
-fn count_radicals(word: String) -> usize {
-    word.len()
+fn count_radicals(word: &str) -> usize {
+    word.chars().count()
 }
