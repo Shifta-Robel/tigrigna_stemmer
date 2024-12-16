@@ -14,7 +14,7 @@ async fn stem(
         .into_iter()
         .map(|word| {
             stemmer::stem_word(
-                word,
+                &word,
                 state.config.prefix_suffix_pair_list.clone(),
                 state.config.prefix_list.clone(),
                 state.config.suffix_list.clone(),

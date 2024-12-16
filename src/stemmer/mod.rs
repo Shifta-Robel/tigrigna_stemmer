@@ -27,7 +27,7 @@ fn normalize(text: &str, homophones_map: &HashMap<char, char>) -> String {
 }
 
 pub fn stem_word(
-    word: String,
+    word: &str,
     prefix_suffix_pair_list: Vec<(String, String)>,
     prefix_list: Vec<String>,
     suffix_list: Vec<String>,
@@ -36,9 +36,10 @@ pub fn stem_word(
     let double_depulicated = deduplicate_double_letter(word, sadis_map);
     let pref_suf_pair_rmvd = rm_prefix_suffix_pair(double_depulicated, prefix_suffix_pair_list);
     let pref_rmvd = rm_affix(pref_suf_pair_rmvd, &prefix_list, AffixType::Prefix);
-    deduplicate_single_letter(rm_affix(pref_rmvd, &suffix_list, AffixType::Suffix), sadis_map)
+    deduplicate_single_letter(&rm_affix(pref_rmvd, &suffix_list, AffixType::Suffix), sadis_map)
 }
 
+#[derive(Copy, Clone)]
 enum AffixType {
     Prefix,
     Suffix,
@@ -49,14 +50,14 @@ enum AffixType {
 /// word was extracted and checked for repeating double sequences. In this case "ግልጥምጥም " glTmTm
 /// is the radical and has repeated double sequence that is "ጥም" "Tm". Therefore, the first
 /// sub-string which is Tem is removed from the string and leaving the word as "ግልጠም" gelTem.
-fn deduplicate_double_letter(word: String, sadis_map: &HashMap<char, char>) -> String {
-    let radical = radical(word.clone(), sadis_map);
+fn deduplicate_double_letter(word: &str, sadis_map: &HashMap<char, char>) -> String {
+    let radical = radical(word, sadis_map);
     let indices = find_duplicate_pairs(radical.as_str());
-    remove_at_indexes(&word, &indices)
+    remove_at_indexes(word, &indices)
 }
 
 /// Changes the each character in the string to their sadis i.e. ገልጠምጠም -> ግልጥምጥም
-fn radical(word: String, sadis_map: &HashMap<char, char>) -> String {
+fn radical(word: &str, sadis_map: &HashMap<char, char>) -> String {
     // አ ዐ families seem to be their own sadis forms, TODO findout if this is right
     let mut radical = String::with_capacity(word.chars().count());
     for c in word.chars() {
@@ -129,16 +130,16 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
     }
 }
 
-fn deduplicate_single_letter(word: String, sadis_map: &HashMap<char, char>) -> String {
-    let radical = radical(word.clone(), sadis_map);
+fn deduplicate_single_letter(word: &str, sadis_map: &HashMap<char, char>) -> String {
+    let radical = radical(word, sadis_map);
     let chars: Vec<char> = radical.chars().collect();
-    let mut indexes: Vec<usize> = Vec::with_capacity(count_radicals(&word));
+    let mut indexes: Vec<usize> = Vec::with_capacity(count_radicals(word));
     for i in 0..chars.len() - 1 {
         if chars[i] == chars[i + 1] {
             indexes.push(i);
         }
     }
-    remove_at_indexes(word.as_str(), &indexes)
+    remove_at_indexes(word, &indexes)
 }
 
 fn remove_at_indexes(s: &str, indexes: &[usize]) -> String {

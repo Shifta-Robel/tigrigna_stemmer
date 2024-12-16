@@ -1,5 +1,5 @@
 [package]
-name = "tigrigna_stemmer_2"
+name = "tigrigna_stemmer"
 version = "0.1.0"
 edition = "2021"
 
