@@ -52,7 +52,7 @@ enum AffixType {
 /// sub-string which is Tem is removed from the string and leaving the word as "ግልጠም" gelTem.
 fn deduplicate_double_letter(word: &str, sadis_map: &HashMap<char, char>) -> String {
     let radical = radical(word, sadis_map);
-    let indices = find_duplicate_pairs(radical.as_str());
+    let indices = find_duplicate_pairs(&radical);
     remove_at_indexes(word, &indices)
 }
 
@@ -95,7 +95,9 @@ fn find_duplicate_pairs(s: &str) -> Vec<usize> {
 fn rm_prefix_suffix_pair(word: String, prefix_suffix_pair_list: Vec<(String, String)>) -> String {
     for (p, s) in prefix_suffix_pair_list {
         if word.starts_with(&p) && word.ends_with(&s) {
-            return word.chars().skip(count_radicals(&p)).take(count_radicals(&word) - count_radicals(&s)).collect();
+            let stripped = word.chars().skip(count_radicals(&p)).take(count_radicals(&word) - count_radicals(&s)).collect::<String>();
+            if count_radicals(stripped.as_str()) >= MINIMUM_STEM_LENGTH.into() {return stripped};
+            return word;
         }
     }
     word
@@ -131,6 +133,7 @@ fn rm_affix(word: String, affix_list: &Vec<String>, affix_type: AffixType) -> St
 }
 
 fn deduplicate_single_letter(word: &str, sadis_map: &HashMap<char, char>) -> String {
+    if count_radicals(word) <= 4 {return word.to_string()};
     let radical = radical(word, sadis_map);
     let chars: Vec<char> = radical.chars().collect();
     let mut indexes: Vec<usize> = Vec::with_capacity(count_radicals(word));

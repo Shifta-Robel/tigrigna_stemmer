@@ -25,7 +25,6 @@ async fn stem(
         .join(" ");
     Ok(stemmed)
 }
-// curl -X POST http://localhost:3030/ -H 'Content-Type: application/json' -d '"ፀሎት  323 ስልጣን ኣብነት5ትምርቲ መንግስቲaዲሞክራሲ ትግርኛ ሰራዊት ሰዓት ኢየሱስ ምስጢር ሰሜን ዘለኣለም ሰሎሞን እስራኤል ክርስቶስ ሰላም ፅዮን ቋንቋ"'
 
 #[tokio::main]
 async fn main() -> Result<(), StemmerError> {
