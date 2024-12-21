@@ -76,7 +76,7 @@ fn find_duplicate_pairs(s: &str) -> Vec<usize> {
     while i <= chars.len() - 4 {
         if chars[i..i + 2] == chars[i + 2..i + 4] {
             indices.extend_from_slice(&[i, i + 1]);
-            i += 4;
+            i += 2;
         } else {
             i += 1;
         }
